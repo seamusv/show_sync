@@ -21,32 +21,30 @@ trait RsyncFetchClient extends FetchClient with Blocking {
   override val fetcher: FetchClient.Service[Any] = new FetchClient.Service[Any] {
 
     override def fetchListing(rootPath: String): ZIO[Any, Throwable, Listing] =
-      blocking.blocking {
-        ZIO.effect {
-          val rsync = new RSync()
-            .source(s"${rsyncSettings.sourcePrefix}/$rootPath")
-            .destination(localSettings.stagePath)
-            .ignoreExisting(true)
-            .recursive(true)
-            .pruneEmptyDirs(true)
-            .protectArgs(true)
-            .dryRun(true)
-            .verbose(true)
-            .passwordFile(rsyncSettings.passwordFile)
+      blocking.effectBlocking {
+        val rsync = new RSync()
+          .source(s"${rsyncSettings.sourcePrefix}/$rootPath")
+          .destination(localSettings.stagePath)
+          .ignoreExisting(true)
+          .recursive(true)
+          .pruneEmptyDirs(true)
+          .protectArgs(true)
+          .dryRun(true)
+          .verbose(true)
+          .passwordFile(rsyncSettings.passwordFile)
 
-          println(rsync.commandLineArgs().asScala.mkString(" "))
+        println(rsync.commandLineArgs().asScala.mkString(" "))
 
-          val output = rsync.execute()
-          if (output.hasSucceeded) {
-            val (paths, files) = output.getStdOut.lines
-              .toList
-              .filter(_.startsWith(rootPath))
-              .partition(_.endsWith("/"))
-            Listing(paths, files)
-          } else {
-            println(output.getStdErr)
-            throw new IllegalStateException(output.getStdErr)
-          }
+        val output = rsync.execute()
+        if (output.hasSucceeded) {
+          val (paths, files) = output.getStdOut.lines
+            .toList
+            .filter(_.startsWith(rootPath))
+            .partition(_.endsWith("/"))
+          Listing(paths, files)
+        } else {
+          println(output.getStdErr)
+          throw new IllegalStateException(output.getStdErr)
         }
       }
 

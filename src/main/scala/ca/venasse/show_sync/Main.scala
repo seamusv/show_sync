@@ -2,6 +2,7 @@ package ca.venasse.show_sync
 
 import ca.venasse.show_sync.config.{Config, _}
 import ca.venasse.show_sync.domain.Monitor
+import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import zio._
 import zio.blocking.Blocking
@@ -11,7 +12,7 @@ object Main extends App {
 
   override def run(args: List[String]): ZIO[Environment, Nothing, Int] =
     (for {
-      cfg <- ZIO.fromEither(pureconfig.loadConfig[Config])
+      cfg <- ZIO.fromEither(ConfigSource.default.load[Config])
 
       blockingEC <- ZIO.environment[Blocking].flatMap(_.blocking.blockingExecutor).map(_.asEC)
       httpClientR <- ZIO.runtime[Environment].map { implicit rts => makeHttp4sClient(blockingEC) }

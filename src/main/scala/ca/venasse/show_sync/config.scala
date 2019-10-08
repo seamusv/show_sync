@@ -4,7 +4,6 @@ import ca.venasse.show_sync.domain.sonarr.domain.SonarrServer
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import zio._
-import zio.interop.catz._
 
 import scala.concurrent.ExecutionContext
 
@@ -26,6 +25,7 @@ object config {
                             completedPath: String,
                           )
 
+  import zio.interop.catz._
   def makeHttp4sClient[R](blockingEC: ExecutionContext)(implicit rts: Runtime[R]): ZManaged[Any, Throwable, Client[Task]] = {
     val res = BlazeClientBuilder[Task](blockingEC)
       .allocated

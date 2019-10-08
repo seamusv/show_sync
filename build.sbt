@@ -27,14 +27,14 @@ scalacOptions := Seq(
 )
 
 libraryDependencies ++= {
-  val circeVersion = "0.12.0-RC4"
-  val http4sVersion = "0.20.10"
-  val zioVersion = "1.0.0-RC12-1"
+  val circeVersion = "0.12.1"
+  val http4sVersion = "0.20.11"
+  val zioVersion = "1.0.0-RC14"
 
   Seq(
     "dev.zio" %% "zio" % zioVersion,
     "dev.zio" %% "zio-streams" % zioVersion,
-    "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC2",
+    "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC5",
 
     "org.http4s" %% "http4s-circe" % http4sVersion,
     "org.http4s" %% "http4s-dsl" % http4sVersion,
@@ -43,9 +43,9 @@ libraryDependencies ++= {
     "commons-net" % "commons-net" % "3.6",
     "com.hierynomus" % "sshj" % "0.27.0",
 
-    "com.github.pureconfig" %% "pureconfig" % "0.11.1",
+    "com.github.pureconfig" %% "pureconfig" % "0.12.1",
 
-    "com.github.fracpete" % "rsync4j-all" % "3.1.2-15",
+    "com.github.fracpete" % "rsync4j-all" % "3.1.2-16",
 
     "io.circe" %% "circe-core" % circeVersion,
     "io.circe" %% "circe-generic" % circeVersion,
@@ -54,9 +54,8 @@ libraryDependencies ++= {
     "io.circe" %% "circe-numbers" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
 
-    "org.slf4j" % "slf4j-api" % "1.7.+",
+    "com.nequissimus" %% "zio-slf4j" % "0.3.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
 
     "org.scalatest" %% "scalatest" % "3.0.8" % "test",
   )
