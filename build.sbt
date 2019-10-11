@@ -27,6 +27,7 @@ scalacOptions := Seq(
 )
 
 libraryDependencies ++= {
+  val catsVersion = "2.0.0"
   val circeVersion = "0.12.1"
   val http4sVersion = "0.20.11"
   val zioVersion = "1.0.0-RC14"
@@ -53,6 +54,11 @@ libraryDependencies ++= {
     "io.circe" %% "circe-jawn" % circeVersion,
     "io.circe" %% "circe-numbers" % circeVersion,
     "io.circe" %% "circe-parser" % circeVersion,
+
+    "org.typelevel" %% "cats-core" % catsVersion,
+    "org.typelevel" %% "cats-effect" % catsVersion,
+    "org.typelevel" %% "cats-kernel" % catsVersion,
+    "org.typelevel" %% "cats-macros" % catsVersion,
 
     "com.nequissimus" %% "zio-slf4j" % "0.3.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",

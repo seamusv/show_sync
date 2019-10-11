@@ -1,12 +1,18 @@
 package ca.venasse.show_sync
 
+import java.util.concurrent.TimeUnit
+
+import ca.venasse.show_sync.clients.{Http4sClient, MediaClient, SyncClient}
 import ca.venasse.show_sync.config.{Config, _}
-import ca.venasse.show_sync.domain.Monitor
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import zio._
 import zio.blocking.Blocking
+import zio.clock.Clock
 import zio.console._
+import zio.duration.Duration
+
+import scala.concurrent.ExecutionContext
 
 object Main extends App {
 
@@ -14,15 +20,22 @@ object Main extends App {
     (for {
       cfg <- ZIO.fromEither(ConfigSource.default.load[Config])
 
-      blockingEC <- ZIO.environment[Blocking].flatMap(_.blocking.blockingExecutor).map(_.asEC)
-      httpClientR <- ZIO.runtime[Environment].map { implicit rts => makeHttp4sClient(blockingEC) }
+      _blockingEC <- ZIO.environment[Blocking].flatMap(_.blocking.blockingExecutor).map(_.asEC)
+      _runtime <- ZIO.runtime[Environment]
 
       _ <- putStrLn(s"SERVERS: ${cfg.servers}")
 
-      program <- httpClientR.use { client =>
-        Monitor.monitorQueue(cfg.servers)
-          .provideSome[Environment](ApplicationEnvironment.appEnv(cfg, client))
-      }
+      monitor = Monitor.processQueues(cfg.servers).repeat(ZSchedule.spaced(Duration(5, TimeUnit.MINUTES)))
+
+      program <- monitor
+        .provide {
+          new Http4sClient.Live with MediaClient.Live with SyncClient.Live with Blocking.Live with Console.Live with Clock.Live {
+            override implicit val runtime: Runtime[Any] = _runtime
+            override val blockingEC: ExecutionContext = _blockingEC
+            override val rsyncSettings: RSyncSettings = cfg.rsync
+            override val localSettings: LocalSettings = cfg.local
+          }
+        }
     } yield program)
       .foldM(
         err => putStrLn(s"Error: $err") *> ZIO.succeed(1),
