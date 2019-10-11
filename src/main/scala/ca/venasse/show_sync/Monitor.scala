@@ -2,9 +2,8 @@ package ca.venasse.show_sync
 
 import ca.venasse.show_sync.clients.{MediaClient, SyncClient}
 import ca.venasse.show_sync.domain.{FetchStatus, Listing, QueueItem, SonarrServer}
-import zio.console.Console
+import zio.ZIO
 import zio.stream.Stream
-import zio.{ZIO, console}
 
 object Monitor {
 
@@ -19,15 +18,13 @@ object Monitor {
           .runCollect
       }
 
-  def processQueues(servers: List[SonarrServer]): ZIO[SyncClient with Console with MediaClient, Throwable, List[QueueItem]] =
+  def processQueues(servers: List[SonarrServer]): ZIO[SyncClient with MediaClient, Throwable, List[QueueItem]] =
     for {
       items <- ZIO.traverseParN(10)(servers)(filteredFetchQueue)
         .map(_.flatten.filter(i => i.status == "Completed" && i.protocol == "torrent"))
-      _ <- console.putStrLn(s"Queue: $items")
 
       listing <- ZIO.traverseParN(10)(items)(item => SyncClient.>.fetchListing(item.title).fold(_ => Listing(List.empty, List.empty), identity))
         .map(_.foldLeft(Listing(List.empty, List.empty)) { case (acc, l) => Listing(acc.paths ++ l.paths, acc.files ++ l.files) })
-      _ <- console.putStrLn(s"Listing: $listing")
 
       _ <- ZIO.traverse(listing.paths)(SyncClient.>.mkLocalDir)
 

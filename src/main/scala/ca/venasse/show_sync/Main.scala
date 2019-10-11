@@ -29,7 +29,7 @@ object Main extends App {
 
       program <- monitor
         .provide {
-          new Http4sClient.Live with MediaClient.Live with SyncClient.Live with Blocking.Live with Console.Live with Clock.Live {
+          new Http4sClient.Live with MediaClient.Live with SyncClient.Live with Blocking.Live with Clock.Live {
             override implicit val runtime: Runtime[Any] = _runtime
             override val blockingEC: ExecutionContext = _blockingEC
             override val rsyncSettings: RSyncSettings = cfg.rsync
