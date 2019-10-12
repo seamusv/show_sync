@@ -1,9 +1,9 @@
 package ca.venasse.show_sync.clients
 
-import ca.venasse.show_sync.domain.{QueueItem, SonarrServer}
+import ca.venasse.show_sync.domain.{InvalidApiKeyAppError, QueueItem, SonarrServer}
 import io.circe.generic.auto._
 import org.http4s.circe.jsonOf
-import org.http4s.{EntityDecoder, Header, Headers, Method, Request, Uri}
+import org.http4s.{EntityDecoder, Header, Headers, Method, Request, Status, Uri}
 import zio.interop.catz._
 import zio.{Task, ZIO}
 
@@ -36,7 +36,13 @@ object MediaClient {
             .withQueryParam("apikey", server.apiKey)
 
           Request[Task](Method.GET, uri, headers = Headers.of(Header("Accept", "application/json")))
-        }(_.as[List[QueueItem]])
+        } { response =>
+          response.status match {
+            case Status.Ok => response.as[List[QueueItem]]
+            case Status.Unauthorized => ZIO.fail(InvalidApiKeyAppError())
+            case _ => ZIO.fail(new IllegalStateException(s"Unknown response ${response.status}"))
+          }
+        }
     }
   }
 

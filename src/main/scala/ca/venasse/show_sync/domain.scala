@@ -10,4 +10,20 @@ object domain {
 
   case class QueueItem(title: String, status: String, protocol: String)
 
+  sealed trait AppError extends RuntimeException {
+
+    def message: String
+
+    final override def getMessage: String = message
+
+    def cause: Option[Throwable]
+
+    final override def getCause: Throwable = cause.orNull
+
+  }
+
+  case class InvalidApiKeyAppError(cause: Option[Throwable] = None) extends AppError {
+    override def message: String = "Invalid API Key"
+  }
+
 }

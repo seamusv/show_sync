@@ -2,7 +2,7 @@ name := "show_sync"
 
 version := "0.1"
 
-scalaVersion := "2.12.9"
+scalaVersion := "2.12.10"
 
 scalacOptions := Seq(
   "-feature",
@@ -28,7 +28,7 @@ scalacOptions := Seq(
 
 libraryDependencies ++= {
   val catsVersion = "2.0.0"
-  val circeVersion = "0.12.1"
+  val circeVersion = "0.12.2"
   val http4sVersion = "0.20.11"
   val zioVersion = "1.0.0-RC14"
 
@@ -63,8 +63,13 @@ libraryDependencies ++= {
     "com.nequissimus" %% "zio-slf4j" % "0.3.0",
     "ch.qos.logback" % "logback-classic" % "1.2.3",
 
-    "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+    "dev.zio" %% "zio-test" % zioVersion % "test",
+    "dev.zio" %% "zio-test-sbt" % zioVersion % "test",
   )
 }
 
 enablePlugins(JavaAppPackaging)
+
+addCommandAlias("dist", "; clean; compile; test; universal:packageBin")
+
+testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
