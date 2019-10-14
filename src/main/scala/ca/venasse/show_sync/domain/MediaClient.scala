@@ -1,10 +1,11 @@
-package ca.venasse.show_sync.clients
+package ca.venasse.show_sync.domain
 
-import ca.venasse.show_sync.domain.{InvalidApiKeyAppError, QueueItem, SonarrServer}
+import ca.venasse.show_sync.clients.Http4sClient
 import io.circe.generic.auto._
 import org.http4s.circe.jsonOf
 import org.http4s.{EntityDecoder, Header, Headers, Method, Request, Status, Uri}
 import zio.interop.catz._
+import zio.stream.Stream
 import zio.{Task, ZIO}
 
 trait MediaClient {
@@ -17,7 +18,7 @@ object MediaClient {
 
   trait Service[R] {
 
-    def fetchQueue(server: SonarrServer): ZIO[R, Throwable, List[QueueItem]]
+    def fetchCompletedTorrents(server: SonarrServer): ZIO[R, Throwable, List[String]]
 
   }
 
@@ -29,7 +30,7 @@ object MediaClient {
 
       implicit val decoder: EntityDecoder[Task, List[QueueItem]] = jsonOf[Task, List[QueueItem]]
 
-      override def fetchQueue(server: SonarrServer): ZIO[Any, Throwable, List[QueueItem]] =
+      override def fetchCompletedTorrents(server: SonarrServer): ZIO[Any, Throwable, List[String]] =
         http4sClient.runRequest {
           val uri = Uri
             .unsafeFromString(s"${server.baseUrl}/api/queue")
@@ -43,12 +44,20 @@ object MediaClient {
             case _ => ZIO.fail(new IllegalStateException(s"Unknown response ${response.status}"))
           }
         }
+          .flatMap { list =>
+            Stream
+              .fromIterable(list)
+              .filter(i => i.status == "Completed" && i.protocol == "torrent")
+              .map(_.title)
+              .runCollect
+          }
+
     }
   }
 
   object > extends Service[MediaClient] {
-    override def fetchQueue(server: SonarrServer): ZIO[MediaClient, Throwable, List[QueueItem]] =
-      ZIO.accessM(_.mediaClient.fetchQueue(server))
+    override def fetchCompletedTorrents(server: SonarrServer): ZIO[MediaClient, Throwable, List[String]] =
+      ZIO.accessM(_.mediaClient.fetchCompletedTorrents(server))
   }
 
 }

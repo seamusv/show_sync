@@ -2,8 +2,9 @@ package ca.venasse.show_sync
 
 import java.util.concurrent.TimeUnit
 
-import ca.venasse.show_sync.clients.{Http4sClient, MediaClient, SyncClient}
+import ca.venasse.show_sync.clients.{ArchiveClient, FilesystemClient, Http4sClient, RsyncClient}
 import ca.venasse.show_sync.config.{Config, _}
+import ca.venasse.show_sync.domain.{MediaClient, Monitor, SyncClient}
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import zio._
@@ -29,7 +30,7 @@ object Main extends App {
 
       program <- monitor
         .provide {
-          new Http4sClient.Live with MediaClient.Live with SyncClient.Live with Blocking.Live with Clock.Live {
+          new ArchiveClient.Live with FilesystemClient.Live with Http4sClient.Live with RsyncClient.Live with MediaClient.Live with SyncClient.Live with Blocking.Live with Clock.Live {
             override implicit val runtime: Runtime[Any] = _runtime
             override val blockingEC: ExecutionContext = _blockingEC
             override val rsyncSettings: RSyncSettings = cfg.rsync
